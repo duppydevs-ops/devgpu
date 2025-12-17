@@ -46,11 +46,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
     # === third-party apps ===
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
-
+    # === installed apps ===
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -161,8 +164,8 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'AutoPart API',
-    'DESCRIPTION': 'AutoPart description',
+    'TITLE': 'GAAS API',
+    'DESCRIPTION': 'GAAS description',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead

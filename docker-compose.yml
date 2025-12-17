@@ -1,54 +1,84 @@
 version: "3.8"
+
 services:
   redis:
-    container_name: redis-GAAS
     image: redis:7.0.11-alpine
+    container_name: redis-GAAS
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  postgresDB_origin:
+    image: postgres:16-alpine
+    container_name: postgresDB_origin-GAAS
+    environment:
+      POSTGRES_DB: ${ORIGIN_DB_NAME}
+      POSTGRES_USER: ${ORIGIN_DB_USER}
+      POSTGRES_PASSWORD: ${ORIGIN_DB_PASSWORD}
+    ports:
+      - "${ORIGIN_DB_PORT}:5432"
+    volumes:
+      - postgres-origin-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ORIGIN_DB_USER} -d ${ORIGIN_DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   django:
     container_name: django-GAAS
     build:
       context: .
       dockerfile: docker/python/DevDockerfile
-    # command: sh -c "python manage.py migrate
-    #                 && python manage.py runserver 0.0.0.0:8000"
     command: sh -c "python manage.py runserver 0.0.0.0:8000"
+    # command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - ./backend/:/app/
+      - ./:/app/
     ports:
       - "8000:8000"
     env_file:
       - .env
     depends_on:
-      - redis
-      - postgresDB_origin
+      redis:
+        condition: service_healthy
+      postgresDB_origin:
+        condition: service_healthy
+
   celery_worker:
     container_name: celery_worker-GAAS
     build:
       context: .
       dockerfile: docker/python/DevDockerfile
     volumes:
-      - ./backend/:/app/
-    command: celery --app=core worker -l INFO -B -E -Q queue1,queue2,queue3 --schedule ./celerybeat-schedule
-
+      - ./:/app/
+    command: celery -A core worker -l INFO -Q queue1,queue2,queue3
     env_file:
       - .env
     depends_on:
-      - django
-      - redis
-  postgresDB_origin:
-    image: postgres:16-alpine
-    container_name: postgresDB_origin-GAAS
-    hostname: localhost
-    environment:
-      POSTGRES_DB: ${ORIGIN_DB_NAME}
-      POSTGRES_USER: ${ORIGIN_DB_USER}
-      POSTGRES_PASSWORD: ${ORIGIN_DB_PASSWORD}
-    ports:
-      - ${ORIGIN_DB_PORT}:5432
+      redis:
+        condition: service_healthy
+      postgresDB_origin:
+        condition: service_healthy
+
+  celery_beat:
+    container_name: celery_beat-GAAS
+    build:
+      context: .
+      dockerfile: docker/python/DevDockerfile
     volumes:
-      - postgres-origin-data:/var/lib/postgresql/data
+      - ./:/app/
+    command: celery -A core beat -l INFO --schedule /app/celerybeat-schedule
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgresDB_origin:
+        condition: service_healthy
 
 volumes:
   postgres-origin-data:
-  node_module:

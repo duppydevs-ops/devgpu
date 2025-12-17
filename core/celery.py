@@ -21,17 +21,6 @@ app.conf.task_queues = (
     Queue('queue3', Exchange('queue3'), routing_key='queue3'),
 )
 
-# app.conf.beat_schedule = {
-#     'rm_forgotpass_objs': {
-#         'task': 'account.tasks.forgotPasswordTasks.removeForgotPassOTP',
-#         'schedule': crontab(hour="1,13"),
-#     },
-#     'rm_verfication_objs': {
-#         'task': 'account.tasks.verifyAccountTasks.removeVerficationAccOTP',
-#         'schedule': crontab(hour="2,14"),
-#     }
-# }
-
 # Add the new setting to handle connection retry on startup
 app.conf.broker_connection_retry_on_startup = True
 
