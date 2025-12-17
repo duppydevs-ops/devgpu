@@ -1,0 +1,76 @@
+# Python
+*.py[cod]
+*.pyo
+__pycache__/
+*.so
+
+# Django
+*.log
+*.pot
+*.pyc
+*.pyo
+*.sqlite3
+db.sqlite3-journal
+
+# Django static
+backend/staticfiles/
+
+# Django media
+backend/mediafiles/
+
+# Local Django settings (e.g., development or testing settings)
+local_settings.py
+settings_local.py
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Virtual Environment
+venv/
+env/
+.venv/
+.ENV/
+env.bak/
+venv.bak/
+
+# Distribution / packaging
+.Python
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+bin/
+backend/lib/
+lib64/
+__pycache__/
+
+# Test Coverage
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
+*.cover
+
+# Celery
+celerybeat-schedule
+
+
+
+
+
+# PyCharm specific configurations
+.idea/
+
+# JetBrains IDEs specific files
+*.iml
+
+# MacOS specific
+.DS_Store
+
+# # .env
+# .env
+# backend/.env  do not add env to .gitignore project on main
