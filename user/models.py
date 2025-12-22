@@ -40,3 +40,4 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)  # Can log in?
     is_staff = models.BooleanField(default=False)  # Can access admin?
     date_joined = models.DateTimeField(auto_now_add=True)
+    balance = models.PositiveIntegerField(default=0)
