@@ -23,7 +23,7 @@ class UserAdmin(UserAdmin):
     # Note: 'username' is removed, 'email' acts as the identifier
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal Info', {'fields': ('phone_number',)}),
+        ('Personal Info', {'fields': ('phone_number', 'balance')}),
         ('Permissions', {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
         }),
