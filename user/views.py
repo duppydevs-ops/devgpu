@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.db.models import F
 from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -10,7 +12,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import (
     CustomTokenObtainPairSerializer,
     RegisterSerializer,
-    UserPublicSerializer,
+    UserPublicSerializer, ChargeBalanceSerializer, ChargeBalanceResponseSerializer,
 )
 
 User = get_user_model()
@@ -98,3 +100,41 @@ class LoginView(TokenObtainPairView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
+
+class ChargeBalanceView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["Balance"],
+        summary="Charge (top up) the logged-in user's balance",
+        description="Adds the given token amount to the authenticated user's balance (simulation).",
+        request=ChargeBalanceSerializer,
+        responses={200: ChargeBalanceResponseSerializer},
+        examples=[
+            OpenApiExample(
+                "Charge 250 tokens",
+                value={"amount": 250},
+                request_only=True,
+            ),
+            OpenApiExample(
+                "Success response",
+                value={"balance": 750, "charged": 250},
+                response_only=True,
+            ),
+        ],
+    )
+    def post(self, request):
+        serializer = ChargeBalanceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        amount = serializer.validated_data["amount"]
+
+        with transaction.atomic():
+            User.objects.filter(pk=request.user.pk).update(balance=F("balance") + amount)
+            request.user.refresh_from_db(fields=["balance"])
+
+        return Response(
+            {"balance": request.user.balance, "charged": amount},
+            status=status.HTTP_200_OK
+        )

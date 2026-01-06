@@ -51,3 +51,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token["email"] = user.email
         token["is_staff"] = bool(getattr(user, "is_staff", False))
         return token
+
+
+class ChargeBalanceSerializer(serializers.Serializer):
+    amount = serializers.IntegerField(min_value=1)
+
+class ChargeBalanceResponseSerializer(serializers.Serializer):
+    balance = serializers.IntegerField()
+    charged = serializers.IntegerField()
