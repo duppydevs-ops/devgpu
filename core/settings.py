@@ -149,8 +149,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+CELERY_TASK_DEFAULT_QUEUE = "queue1"
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'user.User'
