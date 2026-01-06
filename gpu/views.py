@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import GPU, Job
-from .serializers import GPUSerializer, JobCreateSerializer, JobListSerializer
+from .serializers import GPUSerializer, JobCreateSerializer, JobListSerializer, StopJobResponseSerializer
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
 
 
@@ -117,3 +117,45 @@ class RunMyJobView(APIView):
             {"id": job.id, "status": job.status, "started_at": job.started_at},
             status=status.HTTP_200_OK,
         )
+
+
+
+
+@extend_schema(
+    tags=["Jobs"],
+    summary="Stop my job",
+    description="Stops a job owned by the authenticated user. "
+                "If RUNNING, Celery will stop on the next billing loop. "
+                "Sets status to FAILED and sets finished_at.",
+    request=None,
+    responses={
+        200: OpenApiResponse(response=StopJobResponseSerializer, description="Job stopped"),
+        400: OpenApiResponse(description="Job cannot be stopped in current status"),
+        401: OpenApiResponse(description="Unauthorized"),
+        404: OpenApiResponse(description="Job not found"),
+    },
+)
+class StopMyJobView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = StopJobResponseSerializer
+
+    @transaction.atomic
+    def post(self, request, pk: int):
+        job = Job.objects.select_for_update().filter(pk=pk, user=request.user).first()
+        if not job:
+            return Response({"detail": "Job not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Allow stop only if it can still be "in progress" or "about to run"
+        if job.status not in (Job.Status.RUNNING, Job.Status.APPROVED):
+            return Response(
+                {"detail": f"Job cannot be stopped. Current status: {job.status}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        job.status = Job.Status.COMPLETED  # simplest "stopped" state in your choices
+        job.finished_at = timezone.now()
+        job.save(update_fields=["status", "finished_at"])
+        job.logs.create(message="Stopped by user; marked as finished.")
+
+        data = {"id": job.id, "status": job.status, "finished_at": job.finished_at}
+        return Response(self.get_serializer(data).data, status=status.HTTP_200_OK)

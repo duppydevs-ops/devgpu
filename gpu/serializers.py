@@ -58,3 +58,9 @@ class JobListSerializer(serializers.ModelSerializer):
             "started_at",
             "finished_at",
         )
+
+
+class StopJobResponseSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    status = serializers.CharField()
+    finished_at = serializers.DateTimeField(allow_null=True)
