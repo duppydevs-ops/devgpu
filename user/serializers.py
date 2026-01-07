@@ -21,11 +21,19 @@ class RegisterSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password2 = serializers.CharField(write_only=True, min_length=8)
 
-    def validate_phone_number(self, value: str | None) -> str | None:
-        # Important: unique=True + blank strings can cause only ONE user to have "".
-        # Convert "" to None so multiple users can omit phone_number safely.
-        if value == "":
-            return None
+    def validate_email(self, value):
+        value = value.lower().strip()
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
+    def validate_phone_number(self, value):
+        if value in (None, ""):
+            return value  # allow blank/null as your model allows it
+
+        value = value.strip()
+        if User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError("A user with this phone number already exists.")
         return value
 
     def validate(self, attrs: dict) -> dict:
