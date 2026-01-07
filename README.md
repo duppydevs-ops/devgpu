@@ -91,3 +91,11 @@ docker-compose down
 docker-compose down
 docker-compose up --build -d
 ```
+
+## Swagger API Docs
+
+After the containers are running, open Swagger UI here:
+
+* `http://localhost:8000/api/schema/swagger-ui/`
+
+You can use it to test endpoints (list GPUs, create jobs, run/stop jobs, list logs, etc.).
